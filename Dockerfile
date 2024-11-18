@@ -2,7 +2,6 @@ ARG PYTHON_VERSION=3.11.7
 FROM python:${PYTHON_VERSION}-slim as base
 
 ENV PYTHONDONTWRITEBYTECODE=1
-
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
@@ -24,6 +23,7 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 COPY app.py .
+COPY config.yaml .
 
 EXPOSE 8000
 
