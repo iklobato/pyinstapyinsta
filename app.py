@@ -25,7 +25,7 @@ xpath["login_user"] = {"login_elem_no_such_exception_2", "//div[text()='Log In']
 
 
 class Config:
-    def __init__(self, config_path: str = 'config.yml'):
+    def __init__(self, config_path: str = 'config.yaml'):
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
 
