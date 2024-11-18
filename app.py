@@ -11,13 +11,14 @@ from instapy.xpath_compile import xpath
 from webdriver_manager.firefox import GeckoDriverManager
 from instapy import InstaPy, smart_run
 
-datetime.now(pytz.timezone('America/Sao_Paulo'))
-
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s BRT | %(levelname)s | %(funcName)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.FileHandler("instabot.log"), logging.StreamHandler()],
 )
+
+logging.Formatter.converter = lambda *args: datetime.now(pytz.timezone('America/Sao_Paulo')).timetuple()
 
 # Monkey patch to fix error with login element not found
 # https://stackoverflow.com/questions/75662587/instapy-selenium-common-exceptions-nosuchelementexception-message-unable-to-l
