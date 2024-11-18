@@ -312,7 +312,9 @@ class InstagramBot:
                 continue
 
             if not self.is_active_hour():
-                time_module.sleep(random.randint(1800, 3600))
+                sleep_time = random.randint(1800, 3600)
+                logging.info(f"Sleeping for {sleep_time / 60:.1f} minutes")
+                time_module.sleep(sleep_time)
                 continue
 
             break_time = self.get_break_duration()
@@ -329,7 +331,9 @@ class InstagramBot:
                     time_module.sleep(random.randint(180, 600))
                 self.daily_interactions += random.randint(5, 15)
 
-            time_module.sleep(random.randint(900, 1800))
+            time_sleep = random.randint(900, 1800)
+            logging.info(f"Sleeping for {time_sleep / 60:.1f} minutes")
+            time_module.sleep(time_sleep)
 
 
 if __name__ == "__main__":
