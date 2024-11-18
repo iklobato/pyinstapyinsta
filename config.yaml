@@ -19,17 +19,17 @@ schedule:
  active_hours:
    weekday:
      morning:
-       start: "08:45"
-       end: "10:15"
+       start: "07:45"
+       end: "11:15"
      lunch:
        start: "12:15"
        end: "13:15"
      evening:
        start: "18:30"
-       end: "22:30"
+       end: "23:30"
    weekend:
      start: "10:30"
-     end: "22:00"
+     end: "23:50"
 
  breaks:
    bathroom:
