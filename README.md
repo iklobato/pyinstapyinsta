@@ -1,166 +1,213 @@
-# Instagram Engagement Bot
+# 🤖 Instagram Engagement Bot
 
-A sophisticated Instagram automation tool built with InstaPy that mimics human-like behavior for organic engagement growth.
+A sophisticated Instagram automation bot powered by InstaPy, designed to mimic human behavior through configurable YAML settings and Docker deployment.
 
-## Features
+## 📂 Project Structure
+```
+.
+├── .env               # Environment configuration
+├── Makefile           # Build and deployment commands
+├── README.Docker.md   # Docker-specific instructions
+├── README.md          # Main documentation
+├── app.py             # Bot's main script
+├── config.yaml        # Bot's behavior configuration
+├── geckodriver.log    # Firefox webdriver logs
+├── instabot.log       # Bot's activity logs
+└── requirements.txt   # Python dependencies
+```
 
-- 🎯 Smart targeting through locations, hashtags, and competitor accounts
-- 🕒 Human-like activity patterns with natural breaks
-- 📊 Adaptive engagement rates based on time of day
-- 🔄 Intelligent follow/unfollow strategy
-- 🛡️ Built-in safety measures and limits
-- 📅 Weekend/Weekday schedule adaptation
-- 🤖 Headless browser operation
+## 🚀 Quick Start
 
-## Prerequisites
-
-- Python 3.6+
-- Chrome Browser
-- InstaPy library
-- Base64 module
-- Required environment variables setup
-
-## Installation
-
-1. Clone this repository
-2. Install the required dependencies:
+1. 📝 Set up your Instagram credentials in `.env`:
 ```bash
-pip install instapy python-dotenv
+INSTA_USER=your_username
+INSTA_PASS=your_password
 ```
 
-3. Set up your environment variables:
+2. ⚙️ Configure bot behavior in `config.yaml` (see Configuration section)
+
+3. 🏃‍♂️ Run using Make:
 ```bash
-# Create a .env file with your encoded credentials
-INSTA_USER=<base64_encoded_username>
-INSTA_PASS=<base64_encoded_password>
+make run
 ```
 
-## Configuration
-
-The bot's behavior is highly configurable through the `Config` class:
-
-### Location Targeting
-```python
-LOCATIONS = [
-    '213829509/sao-paulo-brazil/',
-    '213670729/rio-de-janeiro-brazil/',
-    # Add/modify locations as needed
-]
-```
-
-### Hashtag Categories
-```python
-HASHTAGS = {
-    'work': ['marketingdigitalbrasil', 'marketingbrasil'],
-    'interest': ['fotografiabrasil', 'designgrafico'],
-    'lifestyle': ['vidadeempreendedor', 'lifestyleempreendedor']
-}
-```
-
-### Target Accounts
-```python
-TARGET_ACCOUNTS = [
-    'rdstation',
-    'resultadosdigitais',
-    # Add competitor accounts
-]
-```
-
-### Engagement Limits
-Different activity levels based on time of day:
-- Sleepy (22:00-06:00)
-- Normal (default)
-- Active (peak hours)
-
-## Features in Detail
-
-### 1. Human-like Behavior
-- Random bathroom breaks (3x daily)
-- Lunch break with variable duration
-- Weekend vs. weekday schedules
-- Natural pauses between actions
-
-### 2. Smart Scheduling
-- Active hours:
-  - Weekdays: 8:30-10:30, 12:00-13:00, 19:00-23:00
-  - Weekends: 11:00-23:00
-- Increased activity during peak engagement hours
-- Reduced activity during off-peak hours
-
-### 3. Safety Measures
-- Maximum daily interaction limits
-- Smart relationship bounds
-- Skip criteria for:
-  - Private accounts
-  - Business accounts
-  - Accounts without profile pictures
-  - Accounts with too many/few followers
-
-### 4. Engagement Strategy
-The bot performs these actions in random order:
-- Feed interaction
-- Location-based engagement
-- Hashtag engagement
-- User follower interaction
-- Strategic unfollowing
-
-## Usage
-
-Run the bot:
+4. 📊 Monitor activity:
 ```bash
-python instagram_bot.py
+make logs
 ```
 
-## Logging
+## ⚙️ Configuration Guide
 
-The bot maintains detailed logs in `instabot.log`, including:
-- Activity timestamps
-- Success/failure of actions
-- Error messages
-- Daily statistics
+### 🔐 Authentication (`config.yaml`)
+Configure your Instagram credentials (loaded from environment variables):
+```yaml
+auth:
+  credentials:
+    username: ${INSTA_USER}  # From .env file
+    password: ${INSTA_PASS}  # From .env file
+```
+Check the file [README.config.md](README.config.md) for more details.
 
-## Safety Features
-
-### Rate Limits
-```python
-HOURLY_LIMITS = {
-    "sleepy": {"follows": 3, "unfollows": 2, "likes": 8, "comments": 1},
-    "normal": {"follows": 5, "unfollows": 4, "likes": 12, "comments": 2},
-    "active": {"follows": 8, "unfollows": 6, "likes": 20, "comments": 4}
-}
+### ⏰ Schedule Configuration
+Define when your bot should be active:
+```yaml
+schedule:
+  # Weekday schedule - mimics work routine
+  active_hours:
+    weekday:
+      morning: {start: "08:30", end: "10:30"}  # Early engagement
+      lunch: {start: "12:00", end: "13:00"}    # Lunch break activity
+      evening: {start: "19:00", end: "23:00"}  # After-work engagement
+    # Weekend schedule - more relaxed timing
+    weekend:
+      start: "11:00"  # Later start
+      end: "23:00"    # Extended evening activity
 ```
 
-### Account Protection
-- Maximum daily interactions: 200
-- Minimum target account followers: 1,000
-- Maximum target account followers: 15,000
-- Minimum required posts: 20
-- Maximum considered posts: 1,000
+### 🧘‍♂️ Natural Breaks
+Configures realistic breaks to maintain human-like behavior:
+```yaml
+schedule:
+  breaks:
+    # Bathroom breaks throughout the day
+    bathroom:
+      morning: {hour_start: 10, hour_end: 11}
+      afternoon: {hour_start: 14, hour_end: 15}
+      evening: {hour_start: 20, hour_end: 21}
+      duration: {min: 300, max: 600}  # 5-10 minutes
 
-## Best Practices
+    # Lunch break configuration
+    lunch:
+      hour_start: 12
+      hour_end: 13
+      duration: {min: 1800, max: 3600}  # 30-60 minutes
+```
 
-1. Regularly monitor your account's health
-2. Adjust limits based on account age and size
-3. Update target hashtags and locations periodically
-4. Keep Instagram credentials secure using base64 encoding
-5. Monitor the log files for any unusual activity
+### 📈 Engagement Limits
+Control interaction rates based on time of day:
+```yaml
+engagement:
+  hourly_limits:
+    sleepy:  # Late night/early morning (22:00-06:00)
+      follows: 3    # Minimal following
+      unfollows: 2  # Reduced unfollowing
+      likes: 8      # Light engagement
+      comments: 1   # Rare comments
 
-## Error Handling
+    normal:  # Standard daytime activity
+      follows: 5
+      unfollows: 4
+      likes: 12
+      comments: 2
 
-The bot includes comprehensive error handling:
-- Automatic retry mechanisms
-- Safe session termination
-- Activity logging
-- Exception catching for individual actions
+    active:  # Peak hours (12-13h, 19-21h)
+      follows: 8    # Maximum following
+      unfollows: 6  # Active unfollowing
+      likes: 20     # High engagement
+      comments: 4   # Increased interaction
+```
 
-## Disclaimer
+### 🎯 Targeting
+Define your target audience:
+```yaml
+targeting:
+  # Geographic targeting
+  locations:
+    - '213829509/sao-paulo-brazil/'
+  
+  # Niche hashtags
+  hashtags:
+    work: ['marketingdigitalbrasil']      # Industry-specific
+    interest: ['fotografiabrasil']         # Interest-based
+    lifestyle: ['vidadeempreendedor']      # Lifestyle-related
+  
+  # Competitor accounts
+  accounts:
+    - 'competitor1'
+    - 'competitor2'
+```
 
-This tool is for educational purposes only. Use at your own risk and in accordance with Instagram's terms of service. Excessive automation may lead to account restrictions.
+### 🛡️ Safety Limits
+Protect your account with reasonable limits:
+```yaml
+limits:
+  interactions:
+    max_daily: 200  # Maximum daily actions
+  
+  relationship_bounds:
+    max_followers: 15000    # Don't engage with mega-accounts
+    min_followers: 1000     # Avoid inactive accounts
+    min_following: 500      # Ensure active users
+    min_posts: 20          # Skip empty profiles
+```
 
-## Contributing
+## 🔄 Operation Modes
 
-Feel free to submit issues and enhancement requests!
+The bot operates in three distinct modes:
 
-## License
+### 😴 Sleepy Mode (22:00-06:00)
+- Minimal activity to mimic natural human rest periods
+- Lowest engagement limits
+- Focus on passive actions like liking
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### 🚶 Normal Mode (Default)
+- Standard activity levels
+- Balanced mix of actions
+- Regular engagement patterns
+
+### 🏃 Active Mode (12-13h, 19-21h)
+- Maximum activity during peak Instagram hours
+- Higher engagement limits
+- Full range of actions enabled
+- More aggressive targeting
+
+## 🛠️ Makefile Commands
+
+```bash
+# Start the bot
+make run
+
+# View real-time logs
+make logs
+
+# Stop the bot
+make stop
+
+# Check bot status
+make status
+
+# Restart the bot
+make restart
+```
+
+## 🔍 Troubleshooting Guide
+
+### 🚫 Common Issues
+
+1. **🔴 Bot Stops Immediately**
+   - Check the logs: `make logs`
+   - Verify `.env` file configuration
+   - Validate `config.yaml` syntax
+   - Ensure Firefox container is running
+
+2. **🔑 Authentication Problems**
+   - Double-check Instagram credentials
+   - Look for suspicious login attempts
+   - Check IP status (VPN might be needed)
+   - Verify two-factor authentication settings
+
+3. **💤 Inactivity Issues**
+   - Confirm current time matches active_hours
+   - Check targeting configuration
+   - Review rate limits in logs
+   - Verify network connectivity
+
+4. **📱 Instagram Blocking**
+   - Reduce engagement limits
+   - Add more random delays
+   - Diversify targeting
+   - Consider account age/history
+
+## ⚠️ Disclaimer
+
+Use this bot responsibly and in accordance with Instagram's terms of service. This tool is designed for educational purposes and to demonstrate automation capabilities. Excessive automation may lead to account restrictions.

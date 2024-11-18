@@ -1,21 +1,15 @@
-# Python 3.11 compatible versions
-instapy
-selenium==4.9.1
-webdriver-manager==4.0.1
-
-# Core dependencies with Python 3.11 support
-clarifai==2.6.2
+beautifulsoup4==4.12.2
 clarifai-grpc>=1.44.0
-plyer==2.1.0
-pyvirtualdisplay==3.0
+clarifai==2.6.2
 emoji==1.7
+instapy
+pillow==10.1.0
+plyer==2.1.0
+python-dotenv==1.0.0
+pytz==2024.2
+pyvirtualdisplay==3.0
 pyyaml==6.0.1
 requests
-beautifulsoup4==4.12.2
-pillow==10.1.0
-
-# Environment management
-python-dotenv==1.0.0
-
-# Type hints support for Python 3.11
+selenium==4.9.1
 typing-extensions>=4.8.0
+webdriver-manager==4.0.1

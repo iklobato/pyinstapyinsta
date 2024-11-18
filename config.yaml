@@ -1,0 +1,101 @@
+auth:
+  credentials:
+    username: ${INSTA_USER}
+    password: ${INSTA_PASS}
+
+limits:
+  interactions:
+    max_daily: 200
+
+  relationship_bounds:
+    max_followers: 15000
+    min_followers: 1000
+    min_following: 500
+    min_posts: 20
+    max_following: 25000
+    max_posts: 1000
+
+schedule:
+  active_hours:
+    weekday:
+      morning:
+        start: "08:30"
+        end: "10:30"
+      lunch:
+        start: "12:00"
+        end: "13:00"
+      evening:
+        start: "19:00"
+        end: "23:00"
+    weekend:
+      start: "11:00"
+      end: "23:00"
+
+  breaks:
+    bathroom:
+      morning:
+        hour_start: 10
+        hour_end: 11
+      afternoon:
+        hour_start: 14
+        hour_end: 15
+      evening:
+        hour_start: 20
+        hour_end: 21
+      duration:
+        min: 300
+        max: 600
+    lunch:
+      hour_start: 12
+      hour_end: 13
+      duration:
+        min: 1800
+        max: 3600
+
+targeting:
+  locations:
+    - '213829509/sao-paulo-brazil/'
+    - '213670729/rio-de-janeiro-brazil/'
+    - '214494743/curitiba-parana/'
+    - '213949389/campinas-sao-paulo/'
+    - '259203564/itatiba/'
+    - '488871860/valinhos-sao-paulo/'
+
+  hashtags:
+    work:
+      - marketingdigitalbrasil
+      - marketingbrasil
+      - empreendedorismobrasil
+    interest:
+      - fotografiabrasil
+      - designgrafico
+      - publicidade
+    lifestyle:
+      - vidadeempreendedor
+      - lifestyleempreendedor
+      - mindsetempreendedor
+
+  accounts:
+    - rdstation
+    - resultadosdigitais
+    - rockcontent
+    - neilpatel
+    - exame
+
+engagement:
+  hourly_limits:
+    sleepy:
+      follows: 3
+      unfollows: 2
+      likes: 8
+      comments: 1
+    normal:
+      follows: 5
+      unfollows: 4
+      likes: 12
+      comments: 2
+    active:
+      follows: 8
+      unfollows: 6
+      likes: 20
+      comments: 4
