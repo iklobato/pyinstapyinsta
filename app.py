@@ -1,12 +1,13 @@
 import os
 import logging
-from base64 import b64decode
-
-from instapy import InstaPy, smart_run
 from datetime import datetime, time, timedelta
 from typing import List, Dict, Optional
 import random
 import time as time_module
+
+from instapy.xpath_compile import xpath
+from webdriver_manager.firefox import GeckoDriverManager
+from instapy import InstaPy, smart_run
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,10 +15,14 @@ logging.basicConfig(
     handlers=[logging.FileHandler("instabot.log"), logging.StreamHandler()],
 )
 
+xpath["login_user"] = {
+    "login_elem_no_such_exception_2", "//div[text()='Log In']"
+}
+
 
 class Config:
-    USERNAME = b64decode(os.getenv('INSTA_USER')).decode()
-    PASSWORD = b64decode(os.getenv('INSTA_PASS')).decode()
+    USERNAME = os.getenv('INSTA_USER')
+    PASSWORD = os.getenv('INSTA_PASS')
     MAX_DAILY_INTERACTIONS = 200
 
     LOCATIONS = [
@@ -76,9 +81,9 @@ class InstagramBot:
         if self.weekend:
             return time(11, 0) <= current <= time(23, 0)
         return (
-                time(8, 30) <= current <= time(10, 30)
-                or time(12, 0) <= current <= time(13, 0)
-                or time(19, 0) <= current <= time(23, 0)
+            time(8, 30) <= current <= time(10, 30)
+            or time(12, 0) <= current <= time(13, 0)
+            or time(19, 0) <= current <= time(23, 0)
         )
 
     def get_break_duration(self) -> Optional[int]:
@@ -86,18 +91,20 @@ class InstagramBot:
 
         # Lunch break
         lunch_end = (
-                datetime.combine(datetime.today(), self.breaks['lunch'])
-                + timedelta(minutes=random.randint(30, 60))
+            datetime.combine(datetime.today(), self.breaks['lunch'])
+            + timedelta(minutes=random.randint(30, 60))
         ).time()
         if self.breaks['lunch'] <= current <= lunch_end:
+            logging.info("Taking a lunch break")
             return random.randint(1800, 3600)
 
         # Bathroom breaks
         for break_time in self.breaks['bathroom']:
             break_end = (
-                    datetime.combine(datetime.today(), break_time) + timedelta(minutes=10)
+                datetime.combine(datetime.today(), break_time) + timedelta(minutes=10)
             ).time()
             if break_time <= current <= break_end:
+                logging.info("Taking a bathroom break")
                 return random.randint(300, 600)
         return None
 
@@ -114,6 +121,7 @@ class InstagramBot:
         if self.weekend:
             limits = {k: int(v * 1.5) for k, v in limits.items()}
 
+        logging.info(f"Running in {mode} mode with limits: {limits}")
         return {'mode': mode, 'limits': limits}
 
     def get_targets(self, type_: str, count: int) -> List[str]:
@@ -122,16 +130,20 @@ class InstagramBot:
             'accounts': self.config.TARGET_ACCOUNTS,
             'locations': self.config.LOCATIONS,
         }
+        logging.info(f"Getting {count} {type_} targets")
         return random.sample(sources[type_], min(count, len(sources[type_])))
 
     def init_session(self) -> InstaPy:
+
         session = InstaPy(
             username=self.config.USERNAME,
             password=self.config.PASSWORD,
-            # bypass_suspicious_attempt=True,
+            headless_browser=True,
+            geckodriver_path=GeckoDriverManager().install(),
             want_check_browser=False,
             disable_image_load=True,
-            headless_browser=True,
+            page_delay=10,
+            bypass_security_challenge_using="email"
         )
 
         settings = self.get_session_settings()
@@ -168,10 +180,11 @@ class InstagramBot:
             amount=random.randint(3, 6), randomize=True, percentage=70
         )
 
-        session.set_smart_location_hashtags(
-            self.get_targets('locations', 2), radius=50, limit=10
-        )
+        # session.set_smart_location_hashtags(
+        #     self.get_targets('locations', 2), radius=50, limit=10
+        # )
 
+        logging.info(f"Session initialized with settings: {settings}")
         return session
 
     def execute_cycle(self, session: InstaPy) -> None:
@@ -181,9 +194,10 @@ class InstagramBot:
         for action in actions:
             try:
                 action()
+                logging.info(f"Action {action} completed")
                 time_module.sleep(random.randint(30, 180))
             except Exception as e:
-                print(f"Error in action: {str(e)}")
+                logging.info(f"Error in action: {str(e)}")
                 continue
 
     def _get_actions(self, session: InstaPy) -> List:
@@ -264,43 +278,39 @@ class InstagramBot:
         if datetime.now().hour in [10, 14, 18, 21]:
             actions.append(unfollow)
 
+        logging.info(f"Actions for this cycle: {actions}")
         return actions
 
     def run(self):
         while True:
-            try:
-                if self.daily_interactions >= self.config.MAX_DAILY_INTERACTIONS:
-                    print("Daily limit reached, resting until tomorrow")
-                    time_module.sleep(24 * 3600)  # Sleep until tomorrow
-                    self.daily_interactions = 0
-                    continue
-
-                if not self.is_active_hour():
-                    time_module.sleep(random.randint(1800, 3600))
-                    continue
-
-                break_time = self.get_break_duration()
-                if break_time:
-                    print(f"Taking a break for {break_time / 60:.1f} minutes")
-                    time_module.sleep(break_time)
-                    continue
-
-                session = self.init_session()
-
-                with smart_run(session):
-                    for _ in range(random.randint(2, 4)):
-                        self.execute_cycle(session)
-                        time_module.sleep(random.randint(180, 600))
-                    self.daily_interactions += random.randint(5, 15)
-
-                time_module.sleep(random.randint(900, 1800))
-
-            except Exception as e:
-                print(f"Error in main loop: {str(e)}")
-                time_module.sleep(900)
+            if self.daily_interactions >= self.config.MAX_DAILY_INTERACTIONS:
+                logging.info("Daily limit reached, resting until tomorrow")
+                time_module.sleep(24 * 3600)  # Sleep until tomorrow
+                self.daily_interactions = 0
                 continue
+
+            if not self.is_active_hour():
+                time_module.sleep(random.randint(1800, 3600))
+                continue
+
+            break_time = self.get_break_duration()
+            if break_time:
+                logging.info(f"Taking a break for {break_time / 60:.1f} minutes")
+                time_module.sleep(break_time)
+                continue
+
+            session = self.init_session()
+
+            with smart_run(session):
+                for _ in range(random.randint(2, 4)):
+                    self.execute_cycle(session)
+                    time_module.sleep(random.randint(180, 600))
+                self.daily_interactions += random.randint(5, 15)
+
+            time_module.sleep(random.randint(900, 1800))
 
 
 if __name__ == "__main__":
+    logging.info("Starting bot")
     bot = InstagramBot()
     bot.run()
