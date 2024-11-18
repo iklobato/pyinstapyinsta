@@ -1,101 +1,108 @@
 auth:
-  credentials:
-    username: ${INSTA_USER}
-    password: ${INSTA_PASS}
+ credentials:
+   username: ${INSTA_USER}
+   password: ${INSTA_PASS}
 
 limits:
-  interactions:
-    max_daily: 200
+ interactions:
+   max_daily: 150
 
-  relationship_bounds:
-    max_followers: 15000
-    min_followers: 1000
-    min_following: 500
-    min_posts: 20
-    max_following: 25000
-    max_posts: 1000
+ relationship_bounds:
+   max_followers: 12000
+   min_followers: 800
+   min_following: 400
+   min_posts: 15
+   max_following: 20000
+   max_posts: 800
 
 schedule:
-  active_hours:
-    weekday:
-      morning:
-        start: "08:30"
-        end: "10:30"
-      lunch:
-        start: "12:00"
-        end: "13:00"
-      evening:
-        start: "19:00"
-        end: "23:00"
-    weekend:
-      start: "11:00"
-      end: "23:00"
+ active_hours:
+   weekday:
+     morning:
+       start: "08:45"
+       end: "10:15"
+     lunch:
+       start: "12:15"
+       end: "13:15"
+     evening:
+       start: "18:30"
+       end: "22:30"
+   weekend:
+     start: "10:30"
+     end: "22:00"
 
-  breaks:
-    bathroom:
-      morning:
-        hour_start: 10
-        hour_end: 11
-      afternoon:
-        hour_start: 14
-        hour_end: 15
-      evening:
-        hour_start: 20
-        hour_end: 21
-      duration:
-        min: 300
-        max: 600
-    lunch:
-      hour_start: 12
-      hour_end: 13
-      duration:
-        min: 1800
-        max: 3600
+ breaks:
+   bathroom:
+     morning:
+       hour_start: 9
+       hour_end: 10
+     afternoon:
+       hour_start: 15
+       hour_end: 16
+     evening:
+       hour_start: 19
+       hour_end: 20
+     duration:
+       min: 240
+       max: 720
+   lunch:
+     hour_start: 12
+     hour_end: 14
+     duration:
+       min: 2400
+       max: 4500
 
 targeting:
-  locations:
-    - '213829509/sao-paulo-brazil/'
-    - '213670729/rio-de-janeiro-brazil/'
-    - '214494743/curitiba-parana/'
-    - '213949389/campinas-sao-paulo/'
-    - '259203564/itatiba/'
-    - '488871860/valinhos-sao-paulo/'
+ locations:
+   - '213829509/sao-paulo-brazil/'
+   - '213670729/rio-de-janeiro-brazil/'
+   - '214494743/curitiba-parana/'
+   - '213949389/campinas-sao-paulo/'
 
-  hashtags:
-    work:
-      - marketingdigitalbrasil
-      - marketingbrasil
-      - empreendedorismobrasil
-    interest:
-      - fotografiabrasil
-      - designgrafico
-      - publicidade
-    lifestyle:
-      - vidadeempreendedor
-      - lifestyleempreendedor
-      - mindsetempreendedor
+ hashtags:
+   work:
+     - programacao
+     - desenvolvedor
+     - tecnologia
+     - javascript
+     - python
+     - reactjs
+   interest:
+     - coding
+     - programadorweb
+     - programadorbackend
+     - fullstack
+     - devops
+     - datascience
+   lifestyle:
+     - vidadev
+     - programadorlifestyle
+     - tech
 
-  accounts:
-    - rdstation
-    - resultadosdigitais
-    - rockcontent
-    - neilpatel
-    - exame
+ accounts:
+   - github
+   - stackoverflow
+   - microsoft
+   - awscloud
+   - googledevs
+   - pythonbrasil
+   - rocketseat_oficial
+   - aluraonline
 
 engagement:
-  hourly_limits:
-    sleepy:
-      follows: 3
-      unfollows: 2
-      likes: 8
-      comments: 1
-    normal:
-      follows: 5
-      unfollows: 4
-      likes: 12
-      comments: 2
-    active:
-      follows: 8
-      unfollows: 6
-      likes: 20
-      comments: 4
+ hourly_limits:
+   sleepy:
+     follows: 2
+     unfollows: 1
+     likes: 5
+     comments: 0
+   normal:
+     follows: 4
+     unfollows: 3
+     likes: 10
+     comments: 1
+   active:
+     follows: 6
+     unfollows: 4
+     likes: 15
+     comments: 2
