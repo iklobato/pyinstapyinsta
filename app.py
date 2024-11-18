@@ -43,36 +43,36 @@ class Config:
                 raise ConfigError(f"Missing required config keys: {missing_keys}")
 
             logging.debug("Loading configuration values")
-            self.USERNAME = config['auth']['credentials']['username']
-            logging.info(f"Configured username: {self.USERNAME}")
-            self.PASSWORD = "********"  # Mask password in logs
+            self.username = config['auth']['credentials']['username']
+            logging.info(f"Configured username: {self.username}")
+            self.password = "********"  # Mask password in logs
             logging.debug("Password loaded (masked)")
 
-            self.MAX_DAILY_INTERACTIONS = config['limits']['interactions']['max_daily']
+            self.max_daily_interactions = config['limits']['interactions']['max_daily']
             logging.info(
-                f"Maximum daily interactions set to: {self.MAX_DAILY_INTERACTIONS}"
+                f"Maximum daily interactions set to: {self.max_daily_interactions}"
             )
 
-            self.LOCATIONS = config['targeting']['locations']
-            logging.info(f"Loaded {len(self.LOCATIONS)} target locations")
+            self.locations = config['targeting']['locations']
+            logging.info(f"Loaded {len(self.locations)} target locations")
 
-            self.HASHTAGS = config['targeting']['hashtags']
-            logging.info(f"Loaded {len(self.HASHTAGS)} target hashtags")
+            self.hashtags = config['targeting']['hashtags']
+            logging.info(f"Loaded {len(self.hashtags)} target hashtags")
 
-            self.TARGET_ACCOUNTS = config['targeting']['accounts']
-            logging.info(f"Loaded {len(self.TARGET_ACCOUNTS)} target accounts")
+            self.target_accounts = config['targeting']['accounts']
+            logging.info(f"Loaded {len(self.target_accounts)} target accounts")
 
-            self.HOURLY_LIMITS = config['engagement']['hourly_limits']
-            logging.info(f"Hourly interaction limits configured: {self.HOURLY_LIMITS}")
+            self.hourly_limits = config['engagement']['hourly_limits']
+            logging.info(f"Hourly interaction limits configured: {self.hourly_limits}")
 
-            self.ACTIVE_HOURS = config['schedule']['active_hours']
-            logging.info(f"Active hours configured: {self.ACTIVE_HOURS}")
+            self.active_hours = config['schedule']['active_hours']
+            logging.info(f"Active hours configured: {self.active_hours}")
 
-            self.BREAKS = config['schedule']['breaks']
+            self.breaks = config['schedule']['breaks']
             logging.info("Break schedule loaded")
 
-            self.RELATIONSHIP_BOUNDS = config['limits']['relationship_bounds']
-            logging.info(f"Relationship bounds set: {self.RELATIONSHIP_BOUNDS}")
+            self.relationship_bounds = config['limits']['relationship_bounds']
+            logging.info(f"Relationship bounds set: {self.relationship_bounds}")
 
             logging.info("Configuration loaded successfully")
 
@@ -137,7 +137,7 @@ class InstagramBot:
     def _init_schedule(self):
         logging.info("Initializing schedule with breaks configuration")
         try:
-            breaks_config = self.config.BREAKS
+            breaks_config = self.config.breaks
             logging.debug(f"Breaks config loaded: {breaks_config}")
 
             logging.info("Setting up bathroom breaks schedule")
@@ -175,7 +175,7 @@ class InstagramBot:
 
     def is_active_hour(self) -> bool:
         current = datetime.now().time()
-        active_hours = self.config.ACTIVE_HOURS
+        active_hours = self.config.active_hours
 
         logging.info(f"Checking active hours. Current time: {current}")
         logging.debug(f"Full active hours config: {active_hours}")
@@ -262,9 +262,9 @@ class InstagramBot:
 
     def get_targets(self, type_: str, count: int) -> List[str]:
         sources = {
-            'hashtags': [tag for tags in self.config.HASHTAGS.values() for tag in tags],
-            'accounts': self.config.TARGET_ACCOUNTS,
-            'locations': self.config.LOCATIONS,
+            'hashtags': [tag for tags in self.config.hashtags.values() for tag in tags],
+            'accounts': self.config.target_accounts,
+            'locations': self.config.locations,
         }
         logging.info(f"Getting {count} {type_} targets")
         return random.sample(sources[type_], min(count, len(sources[type_])))
@@ -280,7 +280,7 @@ class InstagramBot:
             session.set_do_comment(enabled=True, percentage=20)
             amount = min(
                 random.randint(5, 15),
-                self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions,
+                self.config.max_daily_interactions - self.daily_interactions,
             )
             logging.info(f"Interacting with feed, amount: {amount}")
             session.like_by_feed(
@@ -299,7 +299,7 @@ class InstagramBot:
             logging.debug(f"Selected locations: {locations}")
             amount = min(
                 random.randint(4, 8),
-                self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions,
+                self.config.max_daily_interactions - self.daily_interactions,
             )
             skip_top = random.choice([True, False])
             logging.info(
@@ -320,7 +320,7 @@ class InstagramBot:
             logging.debug(f"Selected hashtags: {hashtags}")
             amount = min(
                 random.randint(5, 10),
-                self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions,
+                self.config.max_daily_interactions - self.daily_interactions,
             )
             logging.info(f"Engaging with hashtags, amount: {amount}")
             session.like_by_tags(
@@ -339,7 +339,7 @@ class InstagramBot:
             logging.debug(f"Selected accounts: {accounts}")
             amount = min(
                 random.randint(5, 8),
-                self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions,
+                self.config.max_daily_interactions - self.daily_interactions,
             )
             delay = random.randint(60, 120)
             logging.info(f"Engaging with users, amount: {amount}, delay: {delay}")
@@ -355,7 +355,7 @@ class InstagramBot:
             logging.info("Setting up unfollow action")
             amount = min(
                 random.randint(10, 15),
-                self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions,
+                self.config.max_daily_interactions - self.daily_interactions,
             )
             non_followers = random.choice([True, False])
             delay = random.randint(450, 600)
@@ -376,7 +376,7 @@ class InstagramBot:
         logging.debug("Added base action: interact_feed")
 
         remaining_interactions = (
-            self.config.MAX_DAILY_INTERACTIONS - self.daily_interactions
+            self.config.max_daily_interactions - self.daily_interactions
         )
         logging.info(f"Remaining interactions: {remaining_interactions}")
 
@@ -401,7 +401,7 @@ class InstagramBot:
 
     def get_break_duration(self) -> Optional[int]:
         current = datetime.now().time()
-        breaks_config = self.config.BREAKS
+        breaks_config = self.config.breaks
 
         lunch_end = (
             datetime.combine(datetime.today(), self.breaks['lunch'])
@@ -435,7 +435,7 @@ class InstagramBot:
         else:
             mode = "normal"
 
-        limits = self.config.HOURLY_LIMITS[mode]
+        limits = self.config.hourly_limits[mode]
         if self.weekend:
             limits = {k: int(v * 1.5) for k, v in limits.items()}
 
@@ -444,8 +444,8 @@ class InstagramBot:
 
     def init_session(self) -> InstaPy:
         session = InstaPy(
-            username=self.config.USERNAME,
-            password=self.config.PASSWORD,
+            username=self.config.username,
+            password=self.config.password,
             headless_browser=True,
             geckodriver_path=GeckoDriverManager().install(),
             want_check_browser=False,
@@ -470,7 +470,7 @@ class InstagramBot:
             sleep_after=["follows", "unfollows", "likes", "comments"],
         )
 
-        bounds = self.config.RELATIONSHIP_BOUNDS
+        bounds = self.config.relationship_bounds
         session.set_relationship_bounds(
             enabled=True,
             max_followers=bounds['max_followers'],
@@ -499,7 +499,7 @@ class InstagramBot:
 
         while True:
             try:
-                if self.daily_interactions >= self.config.MAX_DAILY_INTERACTIONS:
+                if self.daily_interactions >= self.config.max_daily_interactions:
                     logging.warning("Daily interaction limit reached")
                     logging.info("Sleeping for 24 hours")
                     time_module.sleep(24 * 3600)
