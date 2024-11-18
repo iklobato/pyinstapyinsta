@@ -1,13 +1,17 @@
-import os
 import logging
 from datetime import datetime, time, timedelta
 from typing import List, Dict, Optional
 import random
 import time as time_module
 
+import pytz
+import yaml
+
 from instapy.xpath_compile import xpath
 from webdriver_manager.firefox import GeckoDriverManager
 from instapy import InstaPy, smart_run
+
+datetime.now(pytz.timezone('America/Sao_Paulo'))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,97 +19,119 @@ logging.basicConfig(
     handlers=[logging.FileHandler("instabot.log"), logging.StreamHandler()],
 )
 
-xpath["login_user"] = {
-    "login_elem_no_such_exception_2", "//div[text()='Log In']"
-}
+# Monkey patch to fix error with login element not found
+# https://stackoverflow.com/questions/75662587/instapy-selenium-common-exceptions-nosuchelementexception-message-unable-to-l
+xpath["login_user"] = {"login_elem_no_such_exception_2", "//div[text()='Log In']"}
 
 
 class Config:
-    USERNAME = os.getenv('INSTA_USER')
-    PASSWORD = os.getenv('INSTA_PASS')
-    MAX_DAILY_INTERACTIONS = 200
+    def __init__(self, config_path: str = 'config.yml'):
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
 
-    LOCATIONS = [
-        '213829509/sao-paulo-brazil/',
-        '213670729/rio-de-janeiro-brazil/',
-        '214494743/curitiba-parana/',
-        '213949389/campinas-sao-paulo/',
-        '259203564/itatiba/',
-        '488871860/valinhos-sao-paulo/',
-    ]
-
-    HASHTAGS = {
-        'work': ['marketingdigitalbrasil', 'marketingbrasil', 'empreendedorismobrasil'],
-        'interest': ['fotografiabrasil', 'designgrafico', 'publicidade'],
-        'lifestyle': [
-            'vidadeempreendedor',
-            'lifestyleempreendedor',
-            'mindsetempreendedor',
-        ],
-    }
-
-    TARGET_ACCOUNTS = [
-        'rdstation',
-        'resultadosdigitais',
-        'rockcontent',
-        'neilpatel',
-        'exame',
-    ]
-
-    HOURLY_LIMITS = {
-        "sleepy": {"follows": 3, "unfollows": 2, "likes": 8, "comments": 1},
-        "normal": {"follows": 5, "unfollows": 4, "likes": 12, "comments": 2},
-        "active": {"follows": 8, "unfollows": 6, "likes": 20, "comments": 4},
-    }
+        self.USERNAME = config['auth']['credentials']['username']
+        self.PASSWORD = config['auth']['credentials']['password']
+        self.MAX_DAILY_INTERACTIONS = config['limits']['interactions']['max_daily']
+        self.LOCATIONS = config['targeting']['locations']
+        self.HASHTAGS = config['targeting']['hashtags']
+        self.TARGET_ACCOUNTS = config['targeting']['accounts']
+        self.HOURLY_LIMITS = config['engagement']['hourly_limits']
+        self.ACTIVE_HOURS = config['schedule']['active_hours']
+        self.BREAKS = config['schedule']['breaks']
+        self.RELATIONSHIP_BOUNDS = config['limits']['relationship_bounds']
 
 
 class InstagramBot:
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, config_path: str = 'config.yml'):
+        self.config = Config(config_path)
         self.daily_interactions = 0
         self.weekend = datetime.now().weekday() >= 5
         self._init_schedule()
 
     def _init_schedule(self):
+        breaks_config = self.config.BREAKS
         self.breaks = {
             'bathroom': [
-                time(random.randint(10, 11), random.randint(0, 59)),
-                time(random.randint(14, 15), random.randint(0, 59)),
-                time(random.randint(20, 21), random.randint(0, 59)),
+                time(
+                    random.randint(
+                        breaks_config['bathroom']['morning']['hour_start'],
+                        breaks_config['bathroom']['morning']['hour_end'],
+                    ),
+                    random.randint(0, 59),
+                ),
+                time(
+                    random.randint(
+                        breaks_config['bathroom']['afternoon']['hour_start'],
+                        breaks_config['bathroom']['afternoon']['hour_end'],
+                    ),
+                    random.randint(0, 59),
+                ),
+                time(
+                    random.randint(
+                        breaks_config['bathroom']['evening']['hour_start'],
+                        breaks_config['bathroom']['evening']['hour_end'],
+                    ),
+                    random.randint(0, 59),
+                ),
             ],
-            'lunch': time(random.randint(12, 13), random.randint(0, 59)),
+            'lunch': time(
+                random.randint(
+                    breaks_config['lunch']['hour_start'],
+                    breaks_config['lunch']['hour_end'],
+                ),
+                random.randint(0, 59),
+            ),
         }
 
     def is_active_hour(self) -> bool:
         current = datetime.now().time()
+        active_hours = self.config.ACTIVE_HOURS
+
         if self.weekend:
-            return time(11, 0) <= current <= time(23, 0)
+            weekend = active_hours['weekend']
+            start = datetime.strptime(weekend['start'], "%H:%M").time()
+            end = datetime.strptime(weekend['end'], "%H:%M").time()
+            return start <= current <= end
+
+        weekday = active_hours['weekday']
+        morning_start = datetime.strptime(weekday['morning']['start'], "%H:%M").time()
+        morning_end = datetime.strptime(weekday['morning']['end'], "%H:%M").time()
+        lunch_start = datetime.strptime(weekday['lunch']['start'], "%H:%M").time()
+        lunch_end = datetime.strptime(weekday['lunch']['end'], "%H:%M").time()
+        evening_start = datetime.strptime(weekday['evening']['start'], "%H:%M").time()
+        evening_end = datetime.strptime(weekday['evening']['end'], "%H:%M").time()
+
         return (
-            time(8, 30) <= current <= time(10, 30)
-            or time(12, 0) <= current <= time(13, 0)
-            or time(19, 0) <= current <= time(23, 0)
+            morning_start <= current <= morning_end
+            or lunch_start <= current <= lunch_end
+            or evening_start <= current <= evening_end
         )
 
     def get_break_duration(self) -> Optional[int]:
         current = datetime.now().time()
+        breaks_config = self.config.BREAKS
 
-        # Lunch break
         lunch_end = (
             datetime.combine(datetime.today(), self.breaks['lunch'])
             + timedelta(minutes=random.randint(30, 60))
         ).time()
         if self.breaks['lunch'] <= current <= lunch_end:
             logging.info("Taking a lunch break")
-            return random.randint(1800, 3600)
+            return random.randint(
+                breaks_config['lunch']['duration']['min'],
+                breaks_config['lunch']['duration']['max'],
+            )
 
-        # Bathroom breaks
         for break_time in self.breaks['bathroom']:
             break_end = (
                 datetime.combine(datetime.today(), break_time) + timedelta(minutes=10)
             ).time()
             if break_time <= current <= break_end:
                 logging.info("Taking a bathroom break")
-                return random.randint(300, 600)
+                return random.randint(
+                    breaks_config['bathroom']['duration']['min'],
+                    breaks_config['bathroom']['duration']['max'],
+                )
         return None
 
     def get_session_settings(self) -> Dict:
@@ -134,7 +160,6 @@ class InstagramBot:
         return random.sample(sources[type_], min(count, len(sources[type_])))
 
     def init_session(self) -> InstaPy:
-
         session = InstaPy(
             username=self.config.USERNAME,
             password=self.config.PASSWORD,
@@ -143,7 +168,7 @@ class InstagramBot:
             want_check_browser=False,
             disable_image_load=True,
             page_delay=10,
-            bypass_security_challenge_using="email"
+            bypass_security_challenge_using="email",
         )
 
         settings = self.get_session_settings()
@@ -162,14 +187,15 @@ class InstagramBot:
             sleep_after=["follows", "unfollows", "likes", "comments"],
         )
 
+        bounds = self.config.RELATIONSHIP_BOUNDS
         session.set_relationship_bounds(
             enabled=True,
-            max_followers=15000,
-            min_followers=1000,
-            min_following=500,
-            min_posts=20,
-            max_following=25000,
-            max_posts=1_000,
+            max_followers=bounds['max_followers'],
+            min_followers=bounds['min_followers'],
+            min_following=bounds['min_following'],
+            min_posts=bounds['min_posts'],
+            max_following=bounds['max_following'],
+            max_posts=bounds['max_posts'],
         )
 
         session.set_skip_users(
@@ -179,10 +205,6 @@ class InstagramBot:
         session.set_user_interact(
             amount=random.randint(3, 6), randomize=True, percentage=70
         )
-
-        # session.set_smart_location_hashtags(
-        #     self.get_targets('locations', 2), radius=50, limit=10
-        # )
 
         logging.info(f"Session initialized with settings: {settings}")
         return session
@@ -285,7 +307,7 @@ class InstagramBot:
         while True:
             if self.daily_interactions >= self.config.MAX_DAILY_INTERACTIONS:
                 logging.info("Daily limit reached, resting until tomorrow")
-                time_module.sleep(24 * 3600)  # Sleep until tomorrow
+                time_module.sleep(24 * 3600)
                 self.daily_interactions = 0
                 continue
 
