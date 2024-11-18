@@ -42,7 +42,7 @@ class Config:
 
 
 class InstagramBot:
-    def __init__(self, config_path: str = 'config.yml'):
+    def __init__(self, config_path: str = 'config.yaml'):
         self.config = Config(config_path)
         self.daily_interactions = 0
         self.weekend = datetime.now().weekday() >= 5
